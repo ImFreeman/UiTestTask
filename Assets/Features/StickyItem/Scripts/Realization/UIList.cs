@@ -6,15 +6,14 @@ using UnityEngine;
 
 namespace Assets.Features.StickyItem.Scripts.Realization
 {
-    public class UIList<TView> : IUIList<TView>
-        where TView : IUIElement
+    public class UIList : IUIList        
     {
         public int Count => _items.Count;
 
-        public event EventHandler<TView> ItemAdded;
-        public event EventHandler<TView> ItemRemoved;
+        public event EventHandler<IUIElement> ItemAdded;
+        public event EventHandler<IUIElement> ItemRemoved;
 
-        private readonly IList<TView> _items;
+        private readonly IList<IUIElement> _items;
 
         private IListView _listView;
         private IListItemProcessingStrategy _applyingStrategy;
@@ -23,7 +22,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
         {
             _listView = listView;
             _applyingStrategy = applyingStrategy;
-            _items = new List<TView>() { Capacity = listInitCapacity };
+            _items = new List<IUIElement>() { Capacity = listInitCapacity };
         }
 
         public void Dispose()
@@ -34,7 +33,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
             _listView = null;
         }
 
-        public Vector2 GetItemPosition(int place)
+        public Vector2 GetItemPosition(int place, IUIElement element)
         {
             var posY = 0.0f;
             for (int i = 0; i < place; i++)
@@ -42,27 +41,35 @@ namespace Assets.Features.StickyItem.Scripts.Realization
                 posY -= Get(i).RectTransform.rect.height;
             }
 
-            posY -= Get(place).RectTransform.rect.height * (1 - Get(place).RectTransform.pivot.y);
+            posY -= element.RectTransform.rect.height * (1 - element.RectTransform.pivot.y);
 
             return new Vector2(0.0f, posY);
         }
 
-        public int AddItem(TView element)
-        {
-            var count = _items.Count;
+        public int AddItem(IUIElement element)
+        {            
+            var count = _items.Count;            
+            if (count > 0)
+            {
+                _applyingStrategy.Add(this, _listView, element);                
+            }
+            else
+            {
+                _applyingStrategy.Insert(this, _listView, element, 0);
+            }
             _items.Add(element);
-            _applyingStrategy.Apply(this, _listView, element, count);
+
             ItemAdded?.Invoke(this, element);
             return count;
         }
 
-        public void AddItem(TView element, int place)
+        public void AddItem(IUIElement element, int place)
         {
             _items.Insert(place, element);
-            _applyingStrategy.Apply(this, _listView, element, place);
+            _applyingStrategy.Insert(this, _listView, element, place);
             ItemAdded?.Invoke(this, element);
         }
-        public TView Get(int place)
+        public IUIElement Get(int place)
         {
             try
             {
@@ -78,9 +85,9 @@ namespace Assets.Features.StickyItem.Scripts.Realization
         public void RemoveItem(int place)
         {
             var item = _items[place];
-            if(item != null)
+            if(item != null && _listView != null)
             {
-                _applyingStrategy.Remove(item);                
+                _applyingStrategy.Remove(item, _listView);                
             }
             _items.RemoveAt(place);
             ItemRemoved?.Invoke(this, item);
@@ -93,6 +100,6 @@ namespace Assets.Features.StickyItem.Scripts.Realization
             {
                 RemoveItem(count);
             }
-        }
+        }        
     }
 }

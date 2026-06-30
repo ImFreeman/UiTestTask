@@ -4,10 +4,9 @@ using UnityEngine;
 
 namespace Assets.Features.StickyItem.Scripts.Realization
 {
-    public class UIListSingleItemStickness<TView> : IUIListStickness
-        where TView : IUIElement
+    public class UIListSingleItemStickness : IUIListStickness        
     {
-        private IUIList<TView> _list;
+        private IUIList _list;
         private IListView _listView;
 
         private int _currentItemPlace = -1;
@@ -18,7 +17,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
         private float _fullPath;
         private bool _isSticked;
 
-        public UIListSingleItemStickness(IUIList<TView> list, IListView listView)
+        public UIListSingleItemStickness(IUIList list, IListView listView)
         {
             _list = list;
             _listView = listView;
@@ -125,7 +124,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
             _isSticked = false;
 
             _currentItem.RectTransform.SetParent(_listView.ContentContainer);
-            _currentItem.RectTransform.anchoredPosition = _list.GetItemPosition(_currentItemPlace);
+            _currentItem.RectTransform.anchoredPosition = _list.GetItemPosition(_currentItemPlace, _currentItem);
 
             _currentItem.RectTransform.offsetMin = new Vector2(0.0f, _currentItem.RectTransform.offsetMin.y);
             _currentItem.RectTransform.offsetMax = new Vector2(0.0f, _currentItem.RectTransform.offsetMax.y);
@@ -133,7 +132,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
 
         private void CalculateBorders()
         {
-            var originPosition = _list.GetItemPosition(_currentItemPlace);
+            var originPosition = _list.GetItemPosition(_currentItemPlace, _currentItem);
 
             _upBorder = Mathf.Abs(
                 originPosition.y
@@ -147,7 +146,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
                + _currentItem.RectTransform.rect.height * (1 - _currentItem.RectTransform.pivot.y);
 
             _fullPath = Mathf.Abs(
-                _list.GetItemPosition(_list.Count - 1).y
+                _list.GetItemPosition(_list.Count - 1, lastItem).y
                 + _listView.Viewport.rect.height
                 - lastItem.RectTransform.rect.height * (1 - lastItem.RectTransform.pivot.y)
                 );
