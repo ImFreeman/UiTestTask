@@ -21,11 +21,17 @@ namespace Assets.Features.StickyItem.Scripts.Realization
         {
             _list = list;
             _listView = listView;
-        }
+
+            _list.ItemAdded += OnListChangedAdded;
+            _list.ItemRemoved += OnListChangedAdded;
+        }        
 
         public void Dispose()
         {
-            if(_currentItem != null)
+            _list.ItemAdded -= OnListChangedAdded;
+            _list.ItemRemoved -= OnListChangedAdded;
+
+            if (_currentItem != null)
             {
                 if (_currentItemPlace != -1)
                 {
@@ -131,7 +137,7 @@ namespace Assets.Features.StickyItem.Scripts.Realization
         }
 
         private void CalculateBorders()
-        {
+        {            
             var originPosition = _list.GetItemPosition(_currentItemPlace, _currentItem);
 
             _upBorder = Mathf.Abs(
@@ -150,6 +156,14 @@ namespace Assets.Features.StickyItem.Scripts.Realization
                 + _listView.Viewport.rect.height
                 - lastItem.RectTransform.rect.height * (1 - lastItem.RectTransform.pivot.y)
                 );
+        }
+
+        private void OnListChangedAdded(object sender, IUIElement e)
+        {
+            if(_currentItemPlace != -1)
+            {
+                CalculateBorders();
+            }
         }
     }
 }
