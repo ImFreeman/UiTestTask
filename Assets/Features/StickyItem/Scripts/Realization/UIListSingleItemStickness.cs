@@ -22,14 +22,14 @@ namespace Assets.Features.StickyItem.Scripts.Realization
             _list = list;
             _listView = listView;
 
-            _list.ItemAdded += OnListChangedAdded;
-            _list.ItemRemoved += OnListChangedAdded;
+            _list.ItemAdded += OnItemAdded; ;
+            _list.ItemRemoved += OnItemRemoved;
         }        
 
         public void Dispose()
         {
-            _list.ItemAdded -= OnListChangedAdded;
-            _list.ItemRemoved -= OnListChangedAdded;
+            _list.ItemAdded -= OnItemAdded;
+            _list.ItemRemoved -= OnItemRemoved;
 
             if (_currentItem != null)
             {
@@ -158,12 +158,31 @@ namespace Assets.Features.StickyItem.Scripts.Realization
                 );
         }
 
-        private void OnListChangedAdded(object sender, IUIElement e)
+        private void OnItemRemoved(object sender, IUIElement e)
         {
-            if(_currentItemPlace != -1)
+            if (_currentItemPlace == -1)
             {
-                CalculateBorders();
+                return;
             }
+            if (e.RectTransform.gameObject.GetInstanceID() == _currentItem.RectTransform.gameObject.GetInstanceID())
+            {
+                Release(_currentItemPlace);
+            }
+            OnListChanged();
+        }
+
+        private void OnItemAdded(object sender, IUIElement e)
+        {
+            if (_currentItemPlace == -1)
+            {
+                return;
+            }
+            OnListChanged();
+        }
+
+        private void OnListChanged()
+        {
+            CalculateBorders();            
         }
     }
 }
